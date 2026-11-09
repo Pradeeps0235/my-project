@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Agriculture Assistant</title>
+<style>
+:root{--bg:#eef8f1;--bg2:#cdeedb;--panel:rgba(255,255,255,.88);--solid:#ffffff;--text:#13352a;--title:#0b4a2f;--accent:#1f9d5c;--accent2:#4cd08a;--field:#f3faf6;--border:#d3e9dc;--soft:#e6f6ec;--danger:#e5484d;--star:#f6b100}
+body[data-theme="ocean"]{--bg:#eef6fd;--bg2:#c8e2f8;--text:#10304c;--title:#0b3a66;--accent:#1976d2;--accent2:#4aa3f0;--field:#f3f8fe;--border:#cfe2f3;--soft:#e4f1fd}
+body[data-theme="sunset"]{--bg:#fff6ee;--bg2:#ffddbf;--text:#4a2a14;--title:#7a2e0b;--accent:#e8590c;--accent2:#ff8f3d;--field:#fff9f3;--border:#f4d9bf;--soft:#ffeedd;--star:#ff9500}
+body[data-theme="dark"]{--bg:#0c1b15;--bg2:#143629;--panel:rgba(19,41,31,.9);--solid:#13291f;--text:#e8f5ee;--title:#9ef0c2;--accent:#22b36a;--accent2:#3fc785;--field:#0f2219;--border:#28513e;--soft:#16352a;--star:#fff3b0}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;color:var(--text);transition:.3s;
+ background:radial-gradient(circle at 15% 10%,rgba(255,230,120,.35) 0,transparent 35%),radial-gradient(circle at 85% 85%,rgba(120,210,255,.28) 0,transparent 40%),linear-gradient(160deg,var(--bg),var(--bg2));
+ background-attachment:fixed;min-height:100vh}
+
+/* ---------- SPLASH SCREEN ---------- */
+.splash{position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(160deg,#1f9d5c,#4cd08a);color:#fff;font-weight:800;font-size:1.3rem;text-align:center;padding:20px;animation:splash 2.2s ease forwards}
+.splash div{font-size:4.5rem;animation:pop 1s ease-in-out infinite}
+@keyframes splash{0%,70%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+
+/* ---------- SHINING STARS ---------- */
+.stars{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.stars .st{position:absolute;background:var(--star);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);opacity:.15;animation:tw 3s ease-in-out infinite}
+.stars .gl{position:absolute;border-radius:50%;background:radial-gradient(circle,var(--star) 0 28%,transparent 72%);opacity:.15;animation:tw2 3.5s ease-in-out infinite}
+.stars .em{position:absolute;font-style:normal;opacity:.15;animation:fl 6s ease-in-out infinite}
+.stars .shoot{position:absolute;left:-10%;width:130px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,var(--star));opacity:0;animation:sh 10s linear infinite;text-decoration:none}
+@keyframes tw{0%,100%{opacity:.12;transform:scale(.55) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
+@keyframes tw2{0%,100%{opacity:.1;transform:scale(.6)}50%{opacity:.95;transform:scale(1.25)}}
+@keyframes fl{0%,100%{opacity:.15;transform:translateY(0) scale(.9)}50%{opacity:.9;transform:translateY(-16px) scale(1.12)}}
+@keyframes sh{0%{transform:translate(0,0) rotate(20deg);opacity:0}2%{opacity:1}13%{transform:translate(125vw,48vh) rotate(20deg);opacity:0}100%{opacity:0}}
+@keyframes sweep{0%{left:-60%}55%,100%{left:140%}}
+@media(prefers-reduced-motion:reduce){.stars *,.hero::after,.side::after,.go::after,.splash div{animation:none!important}.splash{display:none}.stars .st,.stars .gl,.stars .em{opacity:.5}}
+
+.layout{display:flex;min-height:100vh;position:relative;z-index:1}
+.side{width:260px;flex:none;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;padding:24px 18px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;overflow:hidden}
+.side::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-20deg);animation:sweep 7s ease-in-out infinite;pointer-events:none}
+.brand{display:flex;align-items:center;gap:12px}
+.lg{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex:none}
+.brand b{font-size:1.05rem;line-height:1.2}
+.nav{display:flex;flex-direction:column;gap:8px}
+.nav button{display:flex;align-items:center;gap:12px;padding:13px 14px;border:none;border-radius:14px;background:transparent;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;text-align:left}
+.nav button span{font-size:1.25rem}
+.nav button.on{background:#fff;color:var(--accent)}
+.sg{margin-top:auto}
+.sg small{display:block;opacity:.85;margin-bottom:8px;font-size:.78rem;letter-spacing:.5px;text-transform:uppercase}
+.lang{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.lang button{padding:9px 12px;border-radius:11px;border:1.5px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-size:.95rem;cursor:pointer;text-align:left}
+.lang button.on{background:#fff;color:var(--accent);font-weight:700}
+.themes{display:flex;gap:10px}
+.dot{width:28px;height:28px;border-radius:50%;border:2px solid #fff;cursor:pointer;padding:0}
+.dot.on{outline:3px solid rgba(255,255,255,.7);outline-offset:2px}
+.main{flex:1;padding:28px;min-width:0}
+.hero{position:relative;overflow:hidden;background:linear-gradient(120deg,var(--accent),var(--accent2));color:#fff;border-radius:26px;padding:28px 30px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:22px;box-shadow:0 14px 34px rgba(0,0,0,.16)}
+.hero::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:skewX(-20deg);animation:sweep 5s ease-in-out infinite;pointer-events:none}
+.hero h1{margin:0 0 6px;font-size:1.7rem}
+.hero p{margin:0;opacity:.92}
+.stats{display:flex;gap:12px;flex-wrap:wrap}
+.stat{background:rgba(255,255,255,.22);border-radius:16px;padding:12px 18px;text-align:center;min-width:92px}
+.stat b{display:block;font-size:1.5rem}
+.stat small{font-size:.78rem;opacity:.95}
+.pane.hide{display:none}
+.cols{display:grid;grid-template-columns:1.5fr 1fr;gap:22px;align-items:start}
+.card{background:var(--panel);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:22px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.07)}
+.card h3{margin:0 0 4px;color:var(--title);font-size:1.15rem}
+
+/* ---------- DIFFERENT HEADING STYLES ---------- */
+.sh{display:flex;align-items:center;gap:12px;width:fit-content;max-width:100%;margin:26px 0 8px;font-weight:800;font-size:1.05rem}
+#form .sh:first-child{margin-top:0}
+.sh .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:1.25rem;flex:none}
+.sh1{padding:7px 20px 7px 7px;border-radius:999px;background:linear-gradient(90deg,#15a34a,#4ade80);color:#fff;box-shadow:0 6px 14px rgba(21,163,74,.35)}
+.sh1 .ic{background:rgba(255,255,255,.3);border-radius:50%}
+.sh2{padding:9px 38px 9px 10px;background:linear-gradient(90deg,#1d4ed8,#38bdf8);color:#fff;border-radius:10px 0 0 10px;clip-path:polygon(0 0,calc(100% - 20px) 0,100% 50%,calc(100% - 20px) 100%,0 100%)}
+.sh2 .ic{background:rgba(255,255,255,.28)}
+.sh3{padding:7px 18px 7px 7px;border:2px dashed #a855f7;color:#7e22ce;background:rgba(168,85,247,.09);border-radius:16px}
+.sh3 .ic{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff}
+.sh3::after{content:"✨";animation:tw2 2.4s ease-in-out infinite}
+body[data-theme="dark"] .sh3{color:#e9d5ff}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 16px}
+label{display:block;margin:12px 0 6px;font-size:.92rem;font-weight:600}
+label small{opacity:.55;font-weight:400}
+input,select{width:100%;padding:13px;border-radius:13px;border:1.5px solid var(--border);background:var(--field);color:var(--text);font-size:1rem;outline:none;transition:.2s}
+select{-webkit-appearance:none;appearance:none;padding-right:40px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(31,157,92,.16)}
+select.req{border-color:#f0b9bb}
+select.req.ok{border-color:var(--accent)}
+select option{color:#000;background:#fff}
+.go{position:relative;overflow:hidden;width:100%;margin-top:24px;padding:15px;border:none;border-radius:15px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.18)}
+.go::after{content:"";position:absolute;top:0;left:-60%;width:35%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);animation:sweep 3.5s ease-in-out infinite}
+.go:active{transform:scale(.98)}
+#err{color:var(--danger);margin-top:12px;font-weight:600;display:none}
+.res{position:sticky;top:22px;min-height:260px}
+.empty{text-align:center;padding:30px 10px;opacity:.8;line-height:1.5}
+.empty div{font-size:3rem;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.chip{background:var(--soft);border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-size:.88rem;font-weight:600}
+.tip{padding:11px 13px;border-radius:13px;background:var(--field);border:1px solid var(--border);border-left:5px solid var(--accent);margin-top:10px;line-height:1.5;font-size:.95rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th{text-align:left;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;opacity:.65;padding:10px 12px;border-bottom:2px solid var(--border)}
+td{padding:14px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+td b{color:var(--title);font-size:1.02rem}
+td small{display:block;opacity:.65;margin-top:3px;font-size:.78rem;max-width:260px}
+.pr{font-size:1.2rem;font-weight:700;white-space:nowrap}
+.pr small{display:inline;font-weight:400}
+.up{color:#1fa35c;font-weight:600}
+.dn{color:#e0474c;font-weight:600}
+.note{display:block;margin-top:14px;opacity:.7;font-size:.8rem}
+.irrwrap{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:center}
+.ring{width:190px;height:190px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:conic-gradient(var(--rc,#00b386) calc(var(--v,40)*1%),var(--field) 0);transition:.3s}
+.ring div{width:140px;height:140px;border-radius:50%;background:var(--solid);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring b{font-size:2.2rem;color:var(--title)}
+.ring small{opacity:.7}
+input[type=range]{padding:0;height:8px;accent-color:var(--accent);background:transparent;border:none}
+#irrBox{margin-top:18px;padding:16px;border-radius:16px;background:var(--field);border:2px solid #00b386;transition:.3s}
+#irrBox h4{margin:0 0 8px;font-size:1.15rem}
+.auto{margin-top:12px;padding:10px 13px;border-radius:12px;background:var(--soft);border:1px solid var(--border);font-size:.9rem;line-height:1.5}
+.auto:empty{display:none}
+.auto a{color:var(--accent);font-weight:700}
+
+/* ---------- RESULT EXTRAS ---------- */
+.rh{margin:20px 0 4px;font-size:1rem;color:var(--title)}
+.rk{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.rk>span{min-width:120px}
+.bar{flex:1;min-width:80px;height:8px;border-radius:99px;background:var(--field);border:1px solid var(--border);overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.rk small{opacity:.75;white-space:nowrap}
+.fr{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.95rem}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.btns button{padding:10px 14px;border-radius:12px;border:1.5px solid var(--accent);background:var(--soft);color:var(--text);font-weight:600;font-size:.9rem;cursor:pointer}
+.fcg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:12px}
+.fd{background:var(--field);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center}
+.fd b{display:block}
+.fd span{display:block;font-size:.85rem;margin-top:4px}
+.fd .big{font-size:1.35rem;font-weight:700}
+#pRes{margin-top:18px}
+
+@media print{
+ .stars,.side,.hero,.splash,.btns,.cols>.card:not(.res),#pane1,#pane2,#pane3{display:none!important}
+ body{background:#fff!important}
+ .layout{display:block}.main{padding:0}.cols{display:block}
+ .res{position:static;box-shadow:none;border:none;background:#fff}
+}
+@media(max-width:860px){
+ .layout{flex-direction:column}
+ .side{width:100%;height:auto;position:static;flex-direction:row;flex-wrap:wrap;align-items:center;gap:14px;padding:14px}
+ .nav{flex-direction:row;order:3;width:100%}
+ .nav button{flex:1;justify-content:center;padding:10px 6px;font-size:.9rem}
+ .nav button span{font-size:1.1rem}
+ .sg{margin-top:0;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+ .sg small{display:none}
+ .lang{flex-direction:row;margin:0}
+ .main{padding:16px}
+ .cols,.irrwrap{grid-template-columns:1fr}
+ .res{position:static}
+ .hero h1{font-size:1.35rem}
+}
+</style>
+</head>
+<body data-theme="green">
+<div class="splash"><div>🌱</div>Smart Agriculture Assistant</div>
+<div class="stars" id="stars"></div>
+
+<div class="layout">
+
+ <aside class="side">
+  <div class="brand"><div class="lg">🌱</div><b id="t_title"></b></div>
+  <nav class="nav">
+   <button id="tb0" onclick="showTab(0)"><span>🌾</span><em id="tl0" style="font-style:normal"></em></button>
+   <button id="tb1" onclick="showTab(1)"><span>📊</span><em id="tl1" style="font-style:normal"></em></button>
+   <button id="tb2" onclick="showTab(2)"><span>💧</span><em id="tl2" style="font-style:normal"></em></button>
+   <button id="tb3" onclick="showTab(3)"><span>💰</span><em id="tl3" style="font-style:normal"></em></button>
+  </nav>
+  <div class="sg">
+   <small id="t_lang"></small>
+   <div class="lang">
+    <button id="b_en" onclick="setLang('en')">English</button>
+    <button id="b_kn" onclick="setLang('kn')">ಕನ್ನಡ</button>
+    <button id="b_hi" onclick="setLang('hi')">हिन्दी</button>
+   </div>
+   <div class="themes">
+    <button class="dot" id="th_green" style="background:linear-gradient(135deg,#4cd08a,#1f9d5c)" onclick="setTheme('green')"></button>
+    <button class="dot" id="th_ocean" style="background:linear-gradient(135deg,#4aa3f0,#1976d2)" onclick="setTheme('ocean')"></button>
+    <button class="dot" id="th_sunset" style="background:linear-gradient(135deg,#ff8f3d,#e8590c)" onclick="setTheme('sunset')"></button>
+    <button class="dot" id="th_dark" style="background:linear-gradient(135deg,#14493a,#0b1f17)" onclick="setTheme('dark')"></button>
+   </div>
+  </div>
+ </aside>
+
+ <main class="main">
+  <div class="hero">
+   <div><h1 id="t_hero"></h1><p id="t_heros"></p></div>
+   <div class="stats">
+    <div class="stat"><b>31</b><small id="st1"></small></div>
+    <div class="stat"><b>7</b><small id="st2"></small></div>
+    <div class="stat"><b>3</b><small id="st3"></small></div>
+   </div>
+  </div>
+
+  <section class="pane" id="pane0">
+   <div class="cols">
+    <div class="card">
+     <div id="form"></div>
+     <div id="err"></div>
+     <button class="go" id="t_analyze" onclick="analyze()"></button>
+    </div>
+    <div class="card res" id="resPanel"></div>
+   </div>
+  </section>
+
+  <section class="pane hide" id="pane1"><div class="card" id="market"></div></section>
+
+  <section class="pane hide" id="pane2">
+   <div class="card">
+    <h3 id="t_irr"></h3>
+    <div class="irrwrap" style="margin-top:14px">
+     <div>
+      <label><span id="t_temp"></span>: <span id="tv">30</span>°C</label>
+      <input type="range" id="ts" min="0" max="50" value="30" oninput="irr()">
+      <label><span id="t_moist"></span>: <span id="mv">40</span>%</label>
+      <input type="range" id="ms" min="0" max="100" value="40" oninput="irr()">
+      <div id="irrBox"><h4 id="irrT"></h4><div id="irrM"></div></div>
+     </div>
+     <div class="ring" id="ring"><div><b id="rv">40%</b><small id="rl"></small></div></div>
+    </div>
+   </div>
+   <div class="card" id="fcCard" style="margin-top:22px"></div>
+  </section>
+
+  <section class="pane hide" id="pane3"><div class="card" id="profit"></div></section>
+ </main>
+</div>
+
+<script>
+/* [English, Kannada, Hindi] */
+const D=[
+["Bagalkot","ಬಾಗಲಕೋಟೆ","बागलकोट"],["Ballari","ಬಳ್ಳಾರಿ","बल्लारी"],["Belagavi","ಬೆಳಗಾವಿ","बेलगावी"],
+["Bengaluru Rural","ಬೆಂಗಳೂರು ಗ್ರಾಮಾಂತರ","बेंगलुरु ग्रामीण"],["Bengaluru Urban","ಬೆಂಗಳೂರು ನಗರ","बेंगलुरु शहरी"],
+["Bidar","ಬೀದರ್","बीदर"],["Chamarajanagar","ಚಾಮರಾಜನಗರ","चामराजनगर"],["Chikkaballapur","ಚಿಕ್ಕಬಳ್ಳಾಪುರ","चिक्कबल्लापुर"],
+["Chikkamagaluru","ಚಿಕ್ಕಮಗಳೂರು","चिक्कमगलुरु"],["Chitradurga","ಚಿತ್ರದುರ್ಗ","चित्रदुर्ग"],
+["Dakshina Kannada","ದಕ್ಷಿಣ ಕನ್ನಡ","दक्षिण कन्नड़"],["Davanagere","ದಾವಣಗೆರೆ","दावणगेरे"],["Dharwad","ಧಾರವಾಡ","धारवाड़"],
+["Gadag","ಗದಗ","गदग"],["Hassan","ಹಾಸನ","हासन"],["Haveri","ಹಾವೇರಿ","हावेरी"],["Kalaburagi","ಕಲಬುರಗಿ","कलबुर्गी"],
+["Kodagu","ಕೊಡಗು","कोडगु"],["Kolar","ಕೋಲಾರ","कोलार"],["Koppal","ಕೊಪ್ಪಳ","कोप्पल"],["Mandya","ಮಂಡ್ಯ","मांड्या"],
+["Mysuru","ಮೈಸೂರು","मैसूरु"],["Raichur","ರಾಯಚೂರು","रायचूर"],["Ramanagara","ರಾಮನಗರ","रामनगर"],
+["Shivamogga","ಶಿವಮೊಗ್ಗ","शिवमोगा"],["Tumakuru","ತುಮಕೂರು","तुमकुरु"],["Udupi","ಉಡುಪಿ","उडुपी"],
+["Uttara Kannada","ಉತ್ತರ ಕನ್ನಡ","उत्तर कन्नड़"],["Vijayanagara","ವಿಜಯನಗರ","विजयनगर"],
+["Vijayapura","ವಿಜಯಪುರ","विजयपुरा"],["Yadgir","ಯಾದಗಿರಿ","यादगीर"]
+];
+
+/* Typical values per district, same order as D: [soil, climate, lat, lon]
+   soil: 0 Sandy, 1 Clay, 2 Loamy, 3 Black, 4 Red | climate: 0 Hot, 1 Moderate, 2 Cool */
+const DS=[
+[3,0,16.18,75.70],[3,0,15.14,76.92],[3,1,15.85,74.50],
+[4,1,13.29,77.54],[4,1,12.97,77.59],
+[3,1,17.91,77.52],[4,1,11.93,76.94],[4,1,13.43,77.73],
+[4,2,13.32,75.77],[4,0,14.23,76.40],
+[4,1,12.91,74.86],[3,0,14.47,75.92],[3,1,15.46,75.01],
+[3,0,15.43,75.63],[4,1,13.00,76.10],[3,1,14.79,75.40],[3,0,17.33,76.83],
+[4,2,12.42,75.74],[4,1,13.14,78.13],[3,0,15.35,76.15],[2,1,12.52,76.90],
+[4,1,12.30,76.64],[3,0,16.21,77.36],[4,1,12.72,77.28],
+[4,1,13.93,75.57],[4,1,13.34,77.10],[4,1,13.34,74.75],
+[4,1,14.81,74.13],[3,0,15.27,76.39],
+[3,0,16.83,75.71],[3,0,16.77,77.14]
+];
+
+/* Crop profiles, same order as OPT.crop:
+   soil = good soil ids, season = good season ids, water = need (0 Low,1 Medium,2 High),
+   climate = preferred climate, yld = quintal per acre, cost = Rs per acre, npk = kg per acre (N, P2O5, K2O) */
+const CP=[
+ {soil:[1,2,3],season:[0,1],water:2,climate:0,yld:20,cost:30000,npk:[40,20,20]},   /* Rice */
+ {soil:[2,3],season:[1],water:1,climate:2,yld:10,cost:20000,npk:[48,24,16]},       /* Wheat */
+ {soil:[2,4,3],season:[0,1],water:1,climate:1,yld:25,cost:25000,npk:[60,30,16]},   /* Maize */
+ {soil:[3],season:[0],water:1,climate:0,yld:7,cost:40000,npk:[40,20,20]},          /* Cotton */
+ {soil:[2,3,1],season:[0,1,2],water:2,climate:0,yld:400,cost:80000,npk:[100,40,48]}, /* Sugarcane */
+ {soil:[2,0,4],season:[1],water:1,climate:2,yld:80,cost:60000,npk:[48,32,40]},     /* Potato */
+ {soil:[0,4,3],season:[0],water:0,climate:0,yld:7,cost:12000,npk:[32,16,16]}       /* Bajra */
+];
+const CE=["🍚","🌾","🌽","☁️","🎋","🥔","🌱"];
+
+const PE={
+en:["Stem borer and blast. Use resistant varieties and avoid too much nitrogen.","Rust and aphids. Sow on time and spray only if you see them on leaves.","Fall armyworm. Check the leaf whorls every week and spray neem oil early.","Pink bollworm and whitefly. Use pheromone traps and rotate crops.","Early shoot borer and red rot. Plant disease-free setts.","Late blight. Avoid waterlogging and spray at the first spots.","Downy mildew and shoot fly. Treat seed and sow early."],
+kn:["ಕಾಂಡ ಕೊರೆಯುವ ಹುಳು ಮತ್ತು ಬೆಂಕಿ ರೋಗ. ರೋಗ ನಿರೋಧಕ ತಳಿ ಬಳಸಿ; ಹೆಚ್ಚು ಸಾರಜನಕ ಹಾಕಬೇಡಿ.","ತುಕ್ಕು ರೋಗ ಮತ್ತು ಗಿಡಹೇನು. ಸಮಯಕ್ಕೆ ಬಿತ್ತಿ; ಎಲೆಯಲ್ಲಿ ಕಂಡರೆ ಮಾತ್ರ ಸಿಂಪಡಿಸಿ.","ಸೈನಿಕ ಹುಳು. ಪ್ರತಿ ವಾರ ಗಿಡದ ಸುಳಿ ನೋಡಿ; ಬೇವಿನ ಎಣ್ಣೆ ಬೇಗ ಸಿಂಪಡಿಸಿ.","ಗುಲಾಬಿ ಕಾಯಿಹುಳು ಮತ್ತು ಬಿಳಿ ನೊಣ. ಫೆರೋಮೋನ್ ಬಲೆ ಬಳಸಿ; ಬೆಳೆ ಬದಲಿಸಿ.","ಸುಳಿ ಕೊರಕ ಮತ್ತು ಕೆಂಪು ಕೊಳೆ ರೋಗ. ರೋಗ ಮುಕ್ತ ತುಂಡು ಬಳಸಿ.","ಅಂಗಮಾರಿ ರೋಗ. ನೀರು ನಿಲ್ಲಲು ಬಿಡಬೇಡಿ; ಮೊದಲ ಕಲೆ ಕಂಡಾಗ ಸಿಂಪಡಿಸಿ.","ಬೂಜು ರೋಗ ಮತ್ತು ಕಾಂಡ ನೊಣ. ಬೀಜೋಪಚಾರ ಮಾಡಿ; ಬೇಗ ಬಿತ್ತಿ."],
+hi:["तना छेदक और ब्लास्ट। रोग-रोधी किस्म लें; नाइट्रोजन ज़्यादा न डालें।","रतुआ और माहू। समय पर बुवाई करें; पत्तियों पर दिखे तभी छिड़काव करें।","फॉल आर्मीवर्म। हर हफ़्ते पौधे का गुच्छा देखें; नीम तेल जल्दी छिड़कें।","गुलाबी सुंडी और सफ़ेद मक्खी। फेरोमोन ट्रैप लगाएँ; फसल चक्र अपनाएँ।","तना छेदक और लाल सड़न। रोगमुक्त टुकड़े लें।","झुलसा रोग। पानी न रुकने दें; पहला दाग दिखते ही छिड़काव करें।","मृदुरोमिल आसिता और शूट फ्लाई। बीज उपचार करें; जल्दी बोएँ।"]
+};
+
+/* id, emoji, required */
+const FIELDS=[
+ ["district","📍",1],["soil","🌱",1],["season","🌤",1],["water","💧",1],["crop","🌾",1],
+ ["climate","🌡",0],["ph","🧪",0],["source","🚰",0],["style","🍃",0]
+];
+const FE={}; FIELDS.forEach(f=>FE[f[0]]=f);
+/* section key, fields, icon, heading style */
+const SECTIONS=[["g1",["district","soil","season"],"📍","sh1"],["g2",["water","crop"],"💧","sh2"],["g3",["climate","ph","source","style"],"✨","sh3"]];
+
+const OPT={
+ district:{en:D.map(x=>x[0]),kn:D.map(x=>x[1]),hi:D.map(x=>x[2])},
+ soil:{en:["Sandy","Clay","Loamy","Black","Red"],kn:["ಮರಳು","ಜೇಡಿ","ಗೋಡು","ಕಪ್ಪು","ಕೆಂಪು"],hi:["रेतीली","चिकनी","दोमट","काली","लाल"]},
+ season:{en:["Kharif","Rabi","Zaid"],kn:["ಮುಂಗಾರು (ಖರೀಫ್)","ಹಿಂಗಾರು (ರಬಿ)","ಬೇಸಿಗೆ (ಜಾಯ್ದ್)"],hi:["खरीफ","रबी","ज़ायद"]},
+ water:{en:["Low","Medium","High"],kn:["ಕಡಿಮೆ","ಮಧ್ಯಮ","ಹೆಚ್ಚು"],hi:["कम","मध्यम","ज़्यादा"]},
+ crop:{en:["Rice","Wheat","Maize","Cotton","Sugarcane","Potato","Bajra"],kn:["ಭತ್ತ","ಗೋಧಿ","ಮೆಕ್ಕೆಜೋಳ","ಹತ್ತಿ","ಕಬ್ಬು","ಆಲೂಗಡ್ಡೆ","ಸಜ್ಜೆ"],hi:["चावल","गेहूं","मक्का","कपास","गन्ना","आलू","बाजरा"]},
+ climate:{en:["Hot","Moderate","Cool"],kn:["ಬಿಸಿ","ಮಧ್ಯಮ","ತಂಪು"],hi:["गर्म","मध्यम","ठंडा"]},
+ ph:{en:["Acidic","Neutral","Alkaline"],kn:["ಆಮ್ಲೀಯ","ತಟಸ್ಥ","ಕ್ಷಾರೀಯ"],hi:["अम्लीय","सामान्य","क्षारीय"]},
+ source:{en:["Canal","Tubewell","Drip","Rain-fed"],kn:["ಕಾಲುವೆ","ಕೊಳವೆ ಬಾವಿ","ಹನಿ ನೀರಾವರಿ","ಮಳೆಯಾಧಾರಿತ"],hi:["नहर","ट्यूबवेल","ड्रिप","वर्षा आधारित"]},
+ style:{en:["Traditional","Organic","Modern"],kn:["ಸಾಂಪ್ರದಾಯಿಕ","ಸಾವಯವ","ಆಧುನಿಕ"],hi:["पारंपरिक","जैविक","आधुनिक"]}
+};
+
+const T={
+en:{title:"Smart Agriculture Assistant",lang:"Language",hero:"Smart advice for your farm",heros:"Fill in your farm details and get instant guidance.",
+ st1:"districts",st2:"crops",st3:"languages",
+ g1:"Location & soil",g2:"Water & crop",g3:"More details (optional)",
+ soil:"Soil Type",season:"Season",water:"Available Water",crop:"Crop",district:"District",climate:"Climate",ph:"Soil pH",source:"Irrigation Source",style:"Farming Style",
+ area:"📐 Land Area in acres",opt:"(optional)",skip:"Not sure / skip",sel:"Select {x}",
+ analyze:"🌱 Analyze Farm",miss:"⚠️ Please select: {x}",rt:"✅ Your farm analysis",
+ ph0:"Fill in the form and press “Analyze Farm”. Your advice will appear here.",
+ tLow:"⚠️ {c} needs a lot of water. Consider a less thirsty crop like Bajra.",tHigh:"💧 Water is plentiful, but avoid over-irrigating {c}.",tOk:"✅ Water availability suits {c}.",
+ acid:"🧪 Acidic soil: add lime to raise pH.",alk:"🧪 Alkaline soil: add gypsum or organic matter.",drip:"🚰 Drip irrigation saves 30-50% water.",org:"🍃 Use compost and vermicompost for nutrients.",
+ acre:"📐 For {a} acre(s), plan water and seed for the full area before sowing.",
+ tab0:"Farm",tab1:"Market",tab2:"Irrigation",tab3:"Profit",
+ auto:"✨ Soil, season and climate were filled in from your district. You can change them.",tempNow:"🌡 Now {n}°C in {d}.",map:"📍 View on map",
+ sug:"🌟 Best crops for you",match:"match",
+ fert:"🧴 Fertilizer for {a} acre(s)",urea:"Urea",dap:"DAP",mop:"Potash (MOP)",fym:"Compost / FYM",kg:"kg",tn:"tonnes",
+ fnote:"General guide only. Get a soil test and follow your local agriculture office's advice.",
+ pest:"🐛 Watch out for",read:"🔊 Read aloud",wa:"📲 Share on WhatsApp",pdf:"📄 Save as PDF",
+ novoice:"Voice is not available in this language on your device.",
+ fc:"🌦 5-day forecast",fcNone:"Pick a district on the Farm tab to see the forecast.",fcFail:"Forecast could not load. Check your internet.",fcWait:"Loading forecast…",
+ rainSoon:"🌧 Rain expected soon ({n} mm). Delay irrigation.",
+ pt:"💰 Profit Calculator",pAcre:"Land (acres)",pYield:"Expected yield (quintal per acre)",pCost:"Cost (₹ per acre)",pPrice:"Price used",pRev:"Income",pCostT:"Total cost",pProfit:"Profit",pLoss:"Loss",
+ pNote:"Yield and cost are rough estimates. Change them to match your farm. Price comes from the Market tab.",
+ irr:"💧 Live Irrigation Check",temp:"🌡 Temperature",moist:"💦 Soil Moisture",ml:"moisture",
+ i1:"🛑 Avoid Immediate Irrigation",m1:"Soil moisture is high. Extra watering may cause waterlogging.",
+ i2:"✅ Moisture is Adequate",m2:"No irrigation needed right now. Check again in a day.",
+ i3:"💧 Irrigate Now",m3:"Soil is dry. Irrigate to avoid crop stress.",
+ hot:" High temperature increases evaporation, so irrigate in the cooler hours.",cold:" Low temperature slows crop growth, so water sparingly."},
+kn:{title:"ಸ್ಮಾರ್ಟ್ ಕೃಷಿ ಸಹಾಯಕ",lang:"ಭಾಷೆ",hero:"ನಿಮ್ಮ ಜಮೀನಿಗೆ ಸ್ಮಾರ್ಟ್ ಸಲಹೆ",heros:"ನಿಮ್ಮ ಜಮೀನಿನ ವಿವರ ನೀಡಿ, ತಕ್ಷಣ ಸಲಹೆ ಪಡೆಯಿರಿ.",
+ st1:"ಜಿಲ್ಲೆಗಳು",st2:"ಬೆಳೆಗಳು",st3:"ಭಾಷೆಗಳು",
+ g1:"ಸ್ಥಳ ಮತ್ತು ಮಣ್ಣು",g2:"ನೀರು ಮತ್ತು ಬೆಳೆ",g3:"ಹೆಚ್ಚಿನ ವಿವರಗಳು (ಐಚ್ಛಿಕ)",
+ soil:"ಮಣ್ಣಿನ ಪ್ರಕಾರ",season:"ಋತು",water:"ಲಭ್ಯವಿರುವ ನೀರು",crop:"ಬೆಳೆ",district:"ಜಿಲ್ಲೆ",climate:"ಹವಾಮಾನ",ph:"ಮಣ್ಣಿನ pH",source:"ನೀರಾವರಿ ಮೂಲ",style:"ಕೃಷಿ ಪದ್ಧತಿ",
+ area:"📐 ಭೂಮಿ (ಎಕರೆಗಳಲ್ಲಿ)",opt:"(ಐಚ್ಛಿಕ)",skip:"ಗೊತ್ತಿಲ್ಲ / ಬಿಡಿ",sel:"{x} ಆಯ್ಕೆಮಾಡಿ",
+ analyze:"🌱 ಕೃಷಿ ವಿಶ್ಲೇಷಣೆ ಮಾಡಿ",miss:"⚠️ ದಯವಿಟ್ಟು ಆಯ್ಕೆಮಾಡಿ: {x}",rt:"✅ ನಿಮ್ಮ ಕೃಷಿ ವಿಶ್ಲೇಷಣೆ",
+ ph0:"ವಿವರಗಳನ್ನು ತುಂಬಿ “ಕೃಷಿ ವಿಶ್ಲೇಷಣೆ ಮಾಡಿ” ಒತ್ತಿ. ಸಲಹೆ ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.",
+ tLow:"⚠️ {c} ಗೆ ಹೆಚ್ಚು ನೀರು ಬೇಕು. ಸಜ್ಜೆಯಂತಹ ಕಡಿಮೆ ನೀರಿನ ಬೆಳೆಯನ್ನು ಪರಿಗಣಿಸಿ.",tHigh:"💧 ನೀರು ಸಾಕಷ್ಟಿದೆ, ಆದರೆ {c} ಗೆ ಅತಿಯಾಗಿ ನೀರು ಹಾಕಬೇಡಿ.",tOk:"✅ {c} ಗೆ ನೀರಿನ ಲಭ್ಯತೆ ಸೂಕ್ತವಾಗಿದೆ.",
+ acid:"🧪 ಆಮ್ಲೀಯ ಮಣ್ಣು: pH ಹೆಚ್ಚಿಸಲು ಸುಣ್ಣ ಹಾಕಿ.",alk:"🧪 ಕ್ಷಾರೀಯ ಮಣ್ಣು: ಜಿಪ್ಸಂ ಅಥವಾ ಸಾವಯವ ಗೊಬ್ಬರ ಹಾಕಿ.",drip:"🚰 ಹನಿ ನೀರಾವರಿಯಿಂದ 30-50% ನೀರು ಉಳಿಯುತ್ತದೆ.",org:"🍃 ಪೋಷಕಾಂಶಕ್ಕಾಗಿ ಕಾಂಪೋಸ್ಟ್ ಮತ್ತು ಎರೆಹುಳು ಗೊಬ್ಬರ ಬಳಸಿ.",
+ acre:"📐 {a} ಎಕರೆಗೆ ಬಿತ್ತನೆಗೆ ಮೊದಲು ನೀರು ಮತ್ತು ಬೀಜದ ಯೋಜನೆ ಮಾಡಿ.",
+ tab0:"ಕೃಷಿ",tab1:"ಮಾರುಕಟ್ಟೆ",tab2:"ನೀರಾವರಿ",tab3:"ಲಾಭ",
+ auto:"✨ ನಿಮ್ಮ ಜಿಲ್ಲೆಯ ಆಧಾರದ ಮೇಲೆ ಮಣ್ಣು, ಋತು ಮತ್ತು ಹವಾಮಾನ ತುಂಬಲಾಗಿದೆ. ಬೇಕಾದರೆ ಬದಲಿಸಬಹುದು.",tempNow:"🌡 {d}ನಲ್ಲಿ ಈಗ {n}°C.",map:"📍 ನಕ್ಷೆಯಲ್ಲಿ ನೋಡಿ",
+ sug:"🌟 ನಿಮಗೆ ಸೂಕ್ತ ಬೆಳೆಗಳು",match:"ಹೊಂದಾಣಿಕೆ",
+ fert:"🧴 {a} ಎಕರೆಗೆ ಗೊಬ್ಬರ",urea:"ಯೂರಿಯಾ",dap:"ಡಿಎಪಿ",mop:"ಪೊಟ್ಯಾಶ್ (ಎಂಒಪಿ)",fym:"ಕಾಂಪೋಸ್ಟ್ / ತಿಪ್ಪೆ ಗೊಬ್ಬರ",kg:"ಕೆಜಿ",tn:"ಟನ್",
+ fnote:"ಇದು ಸಾಮಾನ್ಯ ಮಾರ್ಗದರ್ಶಿ ಮಾತ್ರ. ಮಣ್ಣು ಪರೀಕ್ಷೆ ಮಾಡಿಸಿ, ಸ್ಥಳೀಯ ಕೃಷಿ ಇಲಾಖೆ ಸಲಹೆ ಪಾಲಿಸಿ.",
+ pest:"🐛 ಈ ಕೀಟ/ರೋಗ ಗಮನಿಸಿ",read:"🔊 ಓದಿ ಹೇಳಿ",wa:"📲 ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ಹಂಚಿ",pdf:"📄 PDF ಉಳಿಸಿ",
+ novoice:"ಈ ಭಾಷೆಯ ಧ್ವನಿ ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಲಭ್ಯವಿಲ್ಲ.",
+ fc:"🌦 5 ದಿನಗಳ ಮುನ್ಸೂಚನೆ",fcNone:"ಮುನ್ಸೂಚನೆ ನೋಡಲು ಕೃಷಿ ಟ್ಯಾಬ್‌ನಲ್ಲಿ ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ.",fcFail:"ಮುನ್ಸೂಚನೆ ಲೋಡ್ ಆಗಲಿಲ್ಲ. ಇಂಟರ್ನೆಟ್ ಪರಿಶೀಲಿಸಿ.",fcWait:"ಮುನ್ಸೂಚನೆ ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
+ rainSoon:"🌧 ಶೀಘ್ರದಲ್ಲೇ ಮಳೆ ({n} ಮಿಮೀ). ನೀರಾವರಿ ಮುಂದೂಡಿ.",
+ pt:"💰 ಲಾಭದ ಲೆಕ್ಕ",pAcre:"ಭೂಮಿ (ಎಕರೆ)",pYield:"ನಿರೀಕ್ಷಿತ ಇಳುವರಿ (ಎಕರೆಗೆ ಕ್ವಿಂಟಲ್)",pCost:"ಖರ್ಚು (ಎಕರೆಗೆ ₹)",pPrice:"ಬಳಸಿದ ಬೆಲೆ",pRev:"ಆದಾಯ",pCostT:"ಒಟ್ಟು ಖರ್ಚು",pProfit:"ಲಾಭ",pLoss:"ನಷ್ಟ",
+ pNote:"ಇಳುವರಿ ಮತ್ತು ಖರ್ಚು ಅಂದಾಜು ಮಾತ್ರ. ನಿಮ್ಮ ಜಮೀನಿಗೆ ಹೊಂದುವಂತೆ ಬದಲಿಸಿ. ಬೆಲೆ ಮಾರುಕಟ್ಟೆ ಟ್ಯಾಬ್‌ನಿಂದ ಬಂದಿದೆ.",
+ irr:"💧 ಲೈವ್ ನೀರಾವರಿ ಪರಿಶೀಲನೆ",temp:"🌡 ತಾಪಮಾನ",moist:"💦 ಮಣ್ಣಿನ ತೇವಾಂಶ",ml:"ತೇವಾಂಶ",
+ i1:"🛑 ಈಗ ನೀರು ಹಾಯಿಸಬೇಡಿ",m1:"ಮಣ್ಣಿನಲ್ಲಿ ತೇವಾಂಶ ಹೆಚ್ಚಿದೆ. ಹೆಚ್ಚು ನೀರಿನಿಂದ ನೀರು ನಿಲ್ಲಬಹುದು.",
+ i2:"✅ ತೇವಾಂಶ ಸಾಕಷ್ಟಿದೆ",m2:"ಈಗ ನೀರಾವರಿ ಬೇಡ. ಒಂದು ದಿನದ ನಂತರ ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.",
+ i3:"💧 ಈಗ ನೀರು ಹಾಯಿಸಿ",m3:"ಮಣ್ಣು ಒಣಗಿದೆ. ಬೆಳೆಗೆ ಒತ್ತಡ ತಪ್ಪಿಸಲು ನೀರು ಹಾಯಿಸಿ.",
+ hot:" ಹೆಚ್ಚು ತಾಪಮಾನದಿಂದ ಆವಿಯಾಗುವಿಕೆ ಹೆಚ್ಚುತ್ತದೆ, ಆದ್ದರಿಂದ ತಂಪಾದ ಸಮಯದಲ್ಲಿ ನೀರು ಹಾಯಿಸಿ.",cold:" ಕಡಿಮೆ ತಾಪಮಾನದಲ್ಲಿ ಬೆಳೆ ನಿಧಾನವಾಗಿ ಬೆಳೆಯುತ್ತದೆ, ಕಡಿಮೆ ನೀರು ಕೊಡಿ."},
+hi:{title:"स्मार्ट कृषि सहायक",lang:"भाषा",hero:"आपके खेत के लिए स्मार्ट सलाह",heros:"अपने खेत की जानकारी भरें और तुरंत सलाह पाएँ।",
+ st1:"ज़िले",st2:"फसलें",st3:"भाषाएँ",
+ g1:"स्थान और मिट्टी",g2:"पानी और फसल",g3:"और जानकारी (वैकल्पिक)",
+ soil:"मिट्टी का प्रकार",season:"मौसम (सीज़न)",water:"उपलब्ध पानी",crop:"फसल",district:"ज़िला",climate:"जलवायु",ph:"मिट्टी का pH",source:"सिंचाई स्रोत",style:"खेती का तरीका",
+ area:"📐 ज़मीन (एकड़ में)",opt:"(वैकल्पिक)",skip:"पता नहीं / छोड़ें",sel:"{x} चुनें",
+ analyze:"🌱 खेत का विश्लेषण करें",miss:"⚠️ कृपया चुनें: {x}",rt:"✅ आपके खेत का विश्लेषण",
+ ph0:"जानकारी भरकर “खेत का विश्लेषण करें” दबाएँ। सलाह यहाँ दिखेगी।",
+ tLow:"⚠️ {c} को बहुत पानी चाहिए। बाजरा जैसी कम पानी वाली फसल सोचें।",tHigh:"💧 पानी भरपूर है, पर {c} में ज़्यादा सिंचाई न करें।",tOk:"✅ {c} के लिए पानी की उपलब्धता ठीक है।",
+ acid:"🧪 अम्लीय मिट्टी: pH बढ़ाने के लिए चूना डालें।",alk:"🧪 क्षारीय मिट्टी: जिप्सम या जैविक खाद डालें।",drip:"🚰 ड्रिप सिंचाई से 30-50% पानी बचता है।",org:"🍃 पोषण के लिए कम्पोस्ट और वर्मीकम्पोस्ट इस्तेमाल करें।",
+ acre:"📐 {a} एकड़ के लिए बुवाई से पहले पानी और बीज की योजना बना लें।",
+ tab0:"खेत",tab1:"बाज़ार",tab2:"सिंचाई",tab3:"लाभ",
+ auto:"✨ आपके ज़िले के आधार पर मिट्टी, मौसम और जलवायु भर दिए गए हैं। आप बदल सकते हैं।",tempNow:"🌡 {d} में अभी {n}°C।",map:"📍 नक्शे में देखें",
+ sug:"🌟 आपके लिए सबसे अच्छी फसलें",match:"मेल",
+ fert:"🧴 {a} एकड़ के लिए खाद",urea:"यूरिया",dap:"डीएपी",mop:"पोटाश (MOP)",fym:"कम्पोस्ट / गोबर खाद",kg:"किग्रा",tn:"टन",
+ fnote:"यह सामान्य मार्गदर्शन है। मिट्टी की जाँच कराएँ और स्थानीय कृषि विभाग की सलाह मानें।",
+ pest:"🐛 इन कीट/रोगों पर नज़र रखें",read:"🔊 सुनें",wa:"📲 WhatsApp पर भेजें",pdf:"📄 PDF सेव करें",
+ novoice:"इस भाषा की आवाज़ आपके डिवाइस पर उपलब्ध नहीं है।",
+ fc:"🌦 5 दिन का पूर्वानुमान",fcNone:"पूर्वानुमान देखने के लिए खेत टैब में ज़िला चुनें।",fcFail:"पूर्वानुमान लोड नहीं हुआ। इंटरनेट जाँचें।",fcWait:"पूर्वानुमान लोड हो रहा है…",
+ rainSoon:"🌧 जल्द बारिश ({n} मिमी)। सिंचाई टालें।",
+ pt:"💰 लाभ कैलकुलेटर",pAcre:"ज़मीन (एकड़)",pYield:"अनुमानित उपज (क्विंटल प्रति एकड़)",pCost:"लागत (₹ प्रति एकड़)",pPrice:"प्रयुक्त भाव",pRev:"आमदनी",pCostT:"कुल लागत",pProfit:"मुनाफ़ा",pLoss:"नुकसान",
+ pNote:"उपज और लागत मोटे अनुमान हैं। अपने खेत के अनुसार बदलें। भाव बाज़ार टैब से लिया गया है।",
+ irr:"💧 लाइव सिंचाई जाँच",temp:"🌡 तापमान",moist:"💦 मिट्टी की नमी",ml:"नमी",
+ i1:"🛑 अभी सिंचाई न करें",m1:"मिट्टी में नमी ज़्यादा है। अधिक पानी से जलभराव हो सकता है।",
+ i2:"✅ नमी पर्याप्त है",m2:"अभी सिंचाई की ज़रूरत नहीं। एक दिन बाद फिर जाँचें।",
+ i3:"💧 अभी सिंचाई करें",m3:"मिट्टी सूखी है। फसल को तनाव से बचाने के लिए सिंचाई करें।",
+ hot:" ज़्यादा तापमान से वाष्पीकरण बढ़ता है, इसलिए ठंडे समय में सिंचाई करें।",cold:" कम तापमान में फसल धीरे बढ़ती है, पानी कम दें।"}
+};
+
+/* ---------- MARKET PRICES (snapshot 3-7 Nov 2026) ---------- */
+const MK=[
+ {c:0,p:2461,m:2441,t:0,s:"India median, 3 Nov. Mandya APMC ₹2,100 (6 Nov)"},
+ {c:1,p:2700,m:2585,t:-3.9,s:"India median, 4 Nov (10 mandis). Next MSP ₹2,610"},
+ {c:2,p:3000,m:null,t:null,s:"Mysuru (Piriya Pattana), 7 Nov"},
+ {c:3,p:9284,m:8267,t:2,s:"Karnataka median, 4 Nov (9 mandis)"},
+ {c:4,p:365,m:365,t:null,frp:1,s:"FRP 2026-27 at 10.25% recovery (₹3,650/tonne)"},
+ {c:5,p:1170,m:null,t:null,s:"All-India wholesale average, 16 Oct (older data)"},
+ {c:6,p:2675,m:2900,t:2.9,s:"India median, 4 Nov (82 mandis)"}
+];
+const ML={
+ en:{title:"📊 Market Prices & Analysis",h1:"Crop",h2:"Price",h3:"Support price",h4:"Status",per:"/quintal",msp:"MSP",above:"above support price",below:"below support price",at:"At support price",none:"No support price listed",tr:"Recent change",note:"Latest reports, 3–7 Nov 2026 (Agmarknet and government data). Check your local APMC before selling."},
+ kn:{title:"📊 ಮಾರುಕಟ್ಟೆ ಬೆಲೆ ಮತ್ತು ವಿಶ್ಲೇಷಣೆ",h1:"ಬೆಳೆ",h2:"ಬೆಲೆ",h3:"ಬೆಂಬಲ ಬೆಲೆ",h4:"ಸ್ಥಿತಿ",per:"/ಕ್ವಿಂಟಲ್",msp:"ಎಂಎಸ್‌ಪಿ",above:"ಬೆಂಬಲ ಬೆಲೆಗಿಂತ ಹೆಚ್ಚು",below:"ಬೆಂಬಲ ಬೆಲೆಗಿಂತ ಕಡಿಮೆ",at:"ಬೆಂಬಲ ಬೆಲೆಯಲ್ಲಿ",none:"ಬೆಂಬಲ ಬೆಲೆ ಇಲ್ಲ",tr:"ಇತ್ತೀಚಿನ ಬದಲಾವಣೆ",note:"ನವೆಂಬರ್ 3–7, 2026ರ ಇತ್ತೀಚಿನ ಬೆಲೆಗಳು. ಮಾರುವ ಮೊದಲು ನಿಮ್ಮ ಸ್ಥಳೀಯ APMC ಪರಿಶೀಲಿಸಿ."},
+ hi:{title:"📊 बाज़ार भाव और विश्लेषण",h1:"फसल",h2:"भाव",h3:"समर्थन मूल्य",h4:"स्थिति",per:"/क्विंटल",msp:"MSP",above:"समर्थन मूल्य से ऊपर",below:"समर्थन मूल्य से नीचे",at:"समर्थन मूल्य पर",none:"समर्थन मूल्य नहीं",tr:"हाल का बदलाव",note:"3–7 नवंबर 2026 के ताज़ा भाव। बेचने से पहले अपनी स्थानीय मंडी (APMC) जाँचें।"}
+};
+
+let lang="en", resultOn=false;
+const V={};
+const $=id=>document.getElementById(id);
+const fill=(s,o)=>s.replace(/\{(\w+)\}/g,(_,k)=>o[k]);
+const has=id=>V[id]!==undefined&&V[id]!=="";
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const money=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const LOC={en:"en-IN",kn:"kn-IN",hi:"hi-IN"};
+
+/* ---------- SHINING STARS ---------- */
+function makeStars(){
+  let h="";
+  for(let i=0;i<70;i++){
+    const s=rnd(5,15).toFixed(1);
+    const cls=i%3===0?"gl":"st";
+    h+='<i class="'+cls+'" style="left:'+rnd(0,100).toFixed(1)+'%;top:'+rnd(0,100).toFixed(1)+'%;width:'+s+'px;height:'+s+'px;animation-delay:'+rnd(0,5).toFixed(2)+'s;animation-duration:'+rnd(2,5).toFixed(2)+'s"></i>';
+  }
+  const em=["✨","⭐","✨","🌟","✨","⭐"];
+  for(let i=0;i<14;i++){
+    h+='<b class="em" style="left:'+rnd(0,96).toFixed(1)+'%;top:'+rnd(0,92).toFixed(1)+'%;font-size:'+rnd(14,30).toFixed(0)+'px;animation-delay:'+rnd(0,6).toFixed(2)+'s;animation-duration:'+rnd(4,8).toFixed(2)+'s">'+em[i%em.length]+'</b>';
+  }
+  h+='<u class="shoot" style="top:10%;animation-delay:2s"></u><u class="shoot" style="top:36%;animation-delay:7s"></u><u class="shoot" style="top:62%;animation-delay:12s"></u>';
+  $("stars").innerHTML=h;
+}
+
+function setTheme(n){
+  document.body.setAttribute("data-theme",n);
+  ["green","ocean","sunset","dark"].forEach(k=>$("th_"+k).className="dot"+(k===n?" on":""));
+  try{localStorage.setItem("theme",n);}catch(e){}
+}
+function showTab(n){
+  [0,1,2,3].forEach(i=>{$("pane"+i).classList.toggle("hide",i!==n);$("tb"+i).classList.toggle("on",i===n);});
+  if(n===3) renderProfit();
+  window.scrollTo(0,0);
+}
+
+/* ---------- DISTRICT AUTO-FILL + WEATHER ---------- */
+let autoOn=false, live=null, climateTouched=false, FC=null;
+function curSeason(){
+  const m=new Date().getMonth()+1;      /* Kharif Jun-Oct, Rabi Nov-Feb, Zaid Mar-May */
+  return m>=6&&m<=10?0:(m>=3&&m<=5?2:1);
+}
+function paintNote(){
+  const el=$("autoNote"); if(!el) return;
+  if(!autoOn||!has("district")){el.innerHTML="";return;}
+  const t=T[lang], i=+V.district; let x=t.auto;
+  if(live&&live.i===i) x+=" "+fill(t.tempNow,{n:live.t,d:OPT.district[lang][i]});
+  x+=' <a href="https://www.openstreetmap.org/?mlat='+DS[i][2]+'&mlon='+DS[i][3]+'#map=10/'+DS[i][2]+'/'+DS[i][3]+'" target="_blank" rel="noopener">'+t.map+'</a>';
+  el.innerHTML=x;
+}
+function onDistrict(){
+  if(!has("district")){autoOn=false;live=null;FC=null;paintNote();renderForecast();return;}
+  const i=+V.district, d=DS[i];
+  V.soil=String(d[0]); V.season=String(curSeason()); V.climate=String(d[1]);
+  autoOn=true; live=null; climateTouched=false;
+  renderForm();
+  fetchTemp(i);
+}
+function fetchTemp(i){
+  const lat=DS[i][2], lon=DS[i][3];
+  FC={i:i,wait:1}; renderForecast();
+  fetch("https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon+"&current=temperature_2m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&forecast_days=5&timezone=auto")
+    .then(r=>r.json())
+    .then(j=>{
+      if(!has("district")||+V.district!==i) return;
+      const c=j&&j.current&&j.current.temperature_2m;
+      if(typeof c==="number"){
+        live={i:i,t:Math.round(c)};
+        if(!climateTouched){
+          V.climate=String(c>=30?0:(c<=22?2:1));
+          const s=$("climate"); if(s){s.value=V.climate;s.classList.add("ok");}
+        }
+        $("ts").value=Math.min(50,Math.max(0,live.t)); irr();
+      }
+      const d=j&&j.daily;
+      if(d&&d.time){
+        FC={i:i,days:d.time.map((x,k)=>({d:x,max:d.temperature_2m_max[k],min:d.temperature_2m_min[k],rain:d.precipitation_sum[k]||0}))};
+      } else FC={i:i,fail:1};
+      paintNote(); renderForecast();
+    })
+    .catch(()=>{ if(FC&&FC.i===i){FC={i:i,fail:1};renderForecast();} });
+}
+function renderForecast(){
+  const el=$("fcCard"); if(!el) return;
+  const t=T[lang];
+  let h='<h3>'+t.fc+(FC?' · '+OPT.district[lang][FC.i]:'')+'</h3>';
+  if(!FC) h+='<p>'+t.fcNone+'</p>';
+  else if(FC.wait) h+='<p>'+t.fcWait+'</p>';
+  else if(FC.fail) h+='<p>'+t.fcFail+'</p>';
+  else {
+    h+='<div class="fcg">';
+    FC.days.forEach(x=>{
+      const ic=x.rain>=1?"🌧":(x.max>=33?"☀️":"⛅");
+      const dn=new Date(x.d+"T12:00:00").toLocaleDateString(LOC[lang],{weekday:"short",day:"numeric"});
+      h+='<div class="fd"><b>'+dn+'</b><div class="big">'+ic+'</div><span>'+Math.round(x.max)+'° / '+Math.round(x.min)+'°</span><span>💧 '+x.rain.toFixed(1)+' mm</span></div>';
+    });
+    h+='</div>';
+    const r2=FC.days.slice(0,2).reduce((a,x)=>a+x.rain,0);
+    if(r2>=5) h+='<div class="tip">'+fill(t.rainSoon,{n:r2.toFixed(0)})+'</div>';
+  }
+  el.innerHTML=h;
+}
+
+/* ---------- FORM ---------- */
+function renderForm(){
+  const t=T[lang]; let h="";
+  SECTIONS.forEach(([sk,ids,icon,cls],si)=>{
+    h+='<div class="sh '+cls+'"><span class="ic">'+icon+'</span>'+t[sk]+'</div><div class="grid">';
+    ids.forEach(id=>{
+      const emo=FE[id][1], req=FE[id][2], label=t[id];
+      h+='<div><label>'+emo+' '+label+' '+(req?'':'<small>'+t.opt+'</small>')+'</label>';
+      h+='<select id="'+id+'" class="'+(req?'req':'')+(has(id)?' ok':'')+'"><option value="">'+(req?fill(t.sel,{x:label}):t.skip)+'</option>';
+      OPT[id][lang].forEach((o,k)=>{h+='<option value="'+k+'"'+(has(id)&&String(V[id])===String(k)?' selected':'')+'>'+o+'</option>';});
+      h+='</select></div>';
+    });
+    if(si===SECTIONS.length-1){
+      h+='<div><label>'+t.area+' <small>'+t.opt+'</small></label><input id="area" type="number" placeholder="2" value="'+(V.area||"")+'"></div>';
+    }
+    h+='</div>';
+    if(si===0) h+='<div class="auto" id="autoNote"></div>';
+  });
+  $("form").innerHTML=h;
+  $("err").style.display="none";
+  paintNote();
+}
+
+function placeholder(){
+  $("resPanel").innerHTML='<div class="empty"><div>🌾</div>'+T[lang].ph0+'</div>';
+}
+
+function analyze(){
+  const t=T[lang];
+  const miss=FIELDS.filter(f=>f[2]&&!has(f[0])).map(f=>t[f[0]]);
+  if(miss.length){$("err").style.display="block";$("err").innerText=fill(t.miss,{x:miss.join(", ")});return;}
+  $("err").style.display="none";
+  resultOn=true; showResult();
+  $("resPanel").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+/* how well a crop fits the chosen soil, season, water and climate (0-100) */
+function score(ci){
+  const p=CP[ci]; let s=0, max=8;
+  if(p.soil.includes(+V.soil)) s+=3;
+  if(p.season.includes(+V.season)) s+=3;
+  const w=+V.water;
+  if(p.water<=w) s+=2; else if(p.water-w===1) s+=1;
+  if(has("climate")){max+=1; if(p.climate===+V.climate) s+=1;}
+  return Math.round(s/max*100);
+}
+/* fertilizer for one crop: urea, DAP, potash in kg, compost in tonnes */
+function ferts(ci,acres){
+  const [n,p,k]=CP[ci].npk;
+  const dap=p/0.46, urea=Math.max(0,(n-0.18*dap)/0.46), mop=k/0.60;
+  return {urea:Math.round(urea*acres),dap:Math.round(dap*acres),mop:Math.round(mop*acres),fym:Math.round(4*acres*10)/10};
+}
+
+function showResult(){
+  const t=T[lang];
+  const en=id=>OPT[id].en[+V[id]], nm=id=>OPT[id][lang][+V[id]];
+  const ci=+V.crop, crop=en("crop"), water=en("water"), c=nm("crop");
+  const tips=[], thirsty=["Rice","Sugarcane"];
+  if(thirsty.includes(crop)&&water==="Low") tips.push(fill(t.tLow,{c}));
+  else if(!thirsty.includes(crop)&&water==="High") tips.push(fill(t.tHigh,{c}));
+  else tips.push(fill(t.tOk,{c}));
+  if(has("ph")&&en("ph")==="Acidic") tips.push(t.acid);
+  if(has("ph")&&en("ph")==="Alkaline") tips.push(t.alk);
+  if(has("source")&&en("source")==="Drip") tips.push(t.drip);
+  if(has("style")&&en("style")==="Organic") tips.push(t.org);
+  const a=parseFloat(V.area);
+  if(a>0) tips.push(fill(t.acre,{a}));
+  let h='<div id="resBody"><h3>'+t.rt+'</h3><div class="chips">';
+  ["district","soil","season","water","crop"].forEach(id=>{h+='<span class="chip">'+(id==="crop"?CE[ci]:FE[id][1])+' '+nm(id)+'</span>';});
+  h+='</div>';
+  tips.forEach(x=>{h+='<div class="tip">'+x+'</div>';});
+
+  /* best crops */
+  const rank=CP.map((p,k)=>[k,score(k)]).sort((x,y)=>y[1]-x[1]).slice(0,3);
+  h+='<h4 class="rh">'+t.sug+'</h4>';
+  rank.forEach(([k,s])=>{
+    h+='<div class="rk"><span>'+CE[k]+' <b>'+OPT.crop[lang][k]+'</b></span><div class="bar"><i style="width:'+s+'%"></i></div><small>'+s+'% '+t.match+'</small></div>';
+  });
+
+  /* fertilizer */
+  const ac=a>0?a:1, f=ferts(ci,ac);
+  h+='<h4 class="rh">'+fill(t.fert,{a:ac})+'</h4>';
+  h+='<div class="fr"><span>'+t.urea+'</span><b>'+f.urea+' '+t.kg+'</b></div>';
+  h+='<div class="fr"><span>'+t.dap+'</span><b>'+f.dap+' '+t.kg+'</b></div>';
+  h+='<div class="fr"><span>'+t.mop+'</span><b>'+f.mop+' '+t.kg+'</b></div>';
+  h+='<div class="fr"><span>'+t.fym+'</span><b>'+f.fym+' '+t.tn+'</b></div>';
+  h+='<small class="note">'+t.fnote+'</small>';
+
+  /* pests */
+  h+='<h4 class="rh">'+t.pest+'</h4><div class="tip">'+PE[lang][ci]+'</div></div>';
+
+  /* actions */
+  h+='<div class="btns"><button onclick="speak()">'+t.read+'</button><button onclick="shareWA()">'+t.wa+'</button><button onclick="window.print()">'+t.pdf+'</button></div><small class="note" id="voiceMsg"></small>';
+  $("resPanel").innerHTML=h;
+}
+
+/* ---------- VOICE + SHARE ---------- */
+function plainText(){
+  return $("resBody").innerText.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\uFE0F]/gu,"");
+}
+function speak(){
+  const ss=window.speechSynthesis, msg=$("voiceMsg");
+  if(!ss||typeof SpeechSynthesisUtterance==="undefined"){msg.innerText=T[lang].novoice;return;}
+  if(ss.speaking){ss.cancel();return;}
+  const vs=ss.getVoices();
+  if(lang!=="en"&&vs.length&&!vs.some(v=>v.lang.toLowerCase().indexOf(lang)===0)){msg.innerText=T[lang].novoice;return;}
+  msg.innerText="";
+  const u=new SpeechSynthesisUtterance(plainText());
+  u.lang=LOC[lang];
+  ss.speak(u);
+}
+function shareWA(){
+  const txt=$("resBody").innerText+"\n\n"+location.href;
+  window.open("https://wa.me/?text="+encodeURIComponent(txt),"_blank");
+}
+
+/* ---------- MARKET ---------- */
+function renderMarket(){
+  const L=ML[lang], f=n=>"₹"+n.toLocaleString("en-IN");
+  let h='<h3>'+L.title+'</h3><div class="tbl"><table><thead><tr><th>'+L.h1+'</th><th>'+L.h2+'</th><th>'+L.h3+'</th><th>'+L.h4+'</th></tr></thead><tbody>';
+  MK.forEach(x=>{
+    let badge='<span>'+L.none+'</span>';
+    if(x.m!==null){
+      const d=(x.p-x.m)/x.m*100;
+      badge=d>=0.05?'<span class="up">▲ '+d.toFixed(1)+'% '+L.above+'</span>'
+           :d<=-0.05?'<span class="dn">▼ '+Math.abs(d).toFixed(1)+'% '+L.below+'</span>'
+           :'<span>'+L.at+'</span>';
+    }
+    const tr=x.t===null?'':'<small>'+L.tr+': '+(x.t>0?"▲":x.t<0?"▼":"●")+' '+Math.abs(x.t)+'%</small>';
+    const ref=x.m!==null?(x.frp?'FRP ':L.msp+' ')+f(x.m):'—';
+    h+='<tr><td><b>'+OPT.crop[lang][x.c]+'</b><small>'+x.s+'</small></td>'
+      +'<td class="pr">'+f(x.p)+' <small>'+L.per+'</small></td>'
+      +'<td>'+ref+'</td><td>'+badge+tr+'</td></tr>';
+  });
+  h+='</tbody></table></div><small class="note">'+L.note+'</small>';
+  $("market").innerHTML=h;
+}
+
+/* ---------- IRRIGATION ---------- */
+function irr(){
+  const t=T[lang], tmp=+$("ts").value, m=+$("ms").value;
+  $("tv").innerText=tmp; $("mv").innerText=m;
+  let title,msg,color;
+  if(m>=60){title=t.i1;msg=t.m1;color="#e5484d";}
+  else if(m>=35){title=t.i2;msg=t.m2;color="#00b386";}
+  else{title=t.i3;msg=t.m3;color="#3b9ae1";}
+  if(tmp>=38) msg+=t.hot; else if(tmp<=10) msg+=t.cold;
+  $("irrT").innerText=title; $("irrM").innerText=msg;
+  $("irrBox").style.borderColor=color;
+  $("ring").style.setProperty("--v",m); $("ring").style.setProperty("--rc",color);
+  $("rv").innerText=m+"%"; $("rl").innerText=t.ml;
+}
+
+/* ---------- PROFIT CALCULATOR ---------- */
+const P={crop:0,acres:2,yld:CP[0].yld,cost:CP[0].cost,last:null,lastA:null};
+function setCrop(ci){P.crop=ci;P.yld=CP[ci].yld;P.cost=CP[ci].cost;}
+function syncProfit(){
+  if(has("crop")&&+V.crop!==P.last){P.last=+V.crop;setCrop(+V.crop);}
+  const a=parseFloat(V.area);
+  if(a>0&&a!==P.lastA){P.lastA=a;P.acres=a;}
+}
+function renderProfit(){
+  syncProfit();
+  const t=T[lang];
+  let h='<h3>'+t.pt+'</h3><div class="grid">';
+  h+='<div><label>'+t.crop+'</label><select id="pc">';
+  OPT.crop[lang].forEach((o,k)=>{h+='<option value="'+k+'"'+(k===P.crop?' selected':'')+'>'+CE[k]+' '+o+'</option>';});
+  h+='</select></div>';
+  h+='<div><label>'+t.pAcre+'</label><input id="pa" type="number" min="0" step="any" value="'+P.acres+'"></div>';
+  h+='<div><label>'+t.pYield+'</label><input id="py" type="number" min="0" step="any" value="'+P.yld+'"></div>';
+  h+='<div><label>'+t.pCost+'</label><input id="pk" type="number" min="0" step="any" value="'+P.cost+'"></div>';
+  h+='</div><div id="pRes"></div><small class="note">'+t.pNote+'</small>';
+  $("profit").innerHTML=h;
+  calcProfit();
+}
+function calcProfit(){
+  const t=T[lang], price=MK[P.crop].p, a=+P.acres||0;
+  const rev=a*(+P.yld||0)*price, cost=a*(+P.cost||0), pr=rev-cost;
+  $("pRes").innerHTML='<div class="fcg">'
+    +'<div class="fd"><span>'+t.pPrice+'</span><div class="big">'+money(price)+'</div><span>'+ML[lang].per+'</span></div>'
+    +'<div class="fd"><span>'+t.pRev+'</span><div class="big">'+money(rev)+'</div></div>'
+    +'<div class="fd"><span>'+t.pCostT+'</span><div class="big">'+money(cost)+'</div></div>'
+    +'<div class="fd"><span>'+(pr>=0?t.pProfit:t.pLoss)+'</span><div class="big '+(pr>=0?'up':'dn')+'">'+money(Math.abs(pr))+'</div></div>'
+    +'</div>';
+}
+
+/* ---------- LANGUAGE ---------- */
+function setLang(l){
+  lang=l; const t=T[l];
+  $("t_title").innerText=t.title; $("t_lang").innerText=t.lang;
+  $("t_hero").innerText=t.hero; $("t_heros").innerText=t.heros;
+  $("st1").innerText=t.st1; $("st2").innerText=t.st2; $("st3").innerText=t.st3;
+  $("t_analyze").innerText=t.analyze;
+  $("t_irr").innerText=t.irr; $("t_temp").innerText=t.temp; $("t_moist").innerText=t.moist;
+  [0,1,2,3].forEach(i=>$("tl"+i).innerText=t["tab"+i]);
+  ["en","kn","hi"].forEach(k=>$("b_"+k).className=(k===l?"on":""));
+  document.documentElement.lang=l;
+  renderForm(); renderMarket(); irr(); renderForecast(); renderProfit();
+  if(resultOn) showResult(); else placeholder();
+}
+
+$("form").addEventListener("change",e=>{
+  if(e.target.tagName==="SELECT"){
+    V[e.target.id]=e.target.value;
+    e.target.classList.toggle("ok",e.target.value!=="");
+    if(e.target.id==="climate") climateTouched=true;
+    if(e.target.id==="district") onDistrict();
+  }
+});
+$("form").addEventListener("input",e=>{ if(e.target.id==="area") V.area=e.target.value; });
+$("profit").addEventListener("change",e=>{ if(e.target.id==="pc"){setCrop(+e.target.value);renderProfit();} });
+$("profit").addEventListener("input",e=>{
+  const m={pa:"acres",py:"yld",pk:"cost"}[e.target.id];
+  if(m){P[m]=e.target.value;calcProfit();}
+});
+
+makeStars();
+let saved="green"; try{saved=localStorage.getItem("theme")||"green";}catch(e){}
+setTheme(saved);
+showTab(0);
+setLang("en");
+</script>
+</body>
+</html>
